@@ -5,20 +5,27 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: set up JDK 17
-        uses: actions/setup-java@v4
-        with:
-          java-version: '17'
-          distribution: 'temurin'
-          cache: gradle
-      - name: Grant execute permission for gradlew
-        run: chmod +x gradlew
-      - name: List files for debug
-        run: ls -R
-      - name: Build with Gradle
-        run: ./gradlew assembleDebug --stacktrace
+
+      - name: Find Project Root and Build
+        run: |
+          # پیدا کردن مسیری که فایل gradlew در آن قرار دارد
+          GRADLEW_PATH=$(find . -name gradlew -print -quit)
+          if [ -z "$GRADLEW_PATH" ]; then
+            echo "فایل پروژه پیدا نشد! لطفا مطمئن شو فایل‌ها را درست آپلود کردی."
+            exit 1
+          fi
+          PROJECT_ROOT=$(dirname "$GRADLEW_PATH")
+          echo "پروژه در این مسیر پیدا شد: $PROJECT_ROOT"
+          
+          # رفتن به پوشه پروژه و دادن دسترسی
+          cd "$PROJECT_ROOT"
+          chmod +x gradlew
+          
+          # اجرای بیلد
+          ./gradlew assembleDebug --stacktrace
+
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
           name: Sony-Remote-App
-          path: '**/build/outputs/apk/debug/*.apk'
+          path: "**/build/outputs/apk/debug/*.apk"
